@@ -2,11 +2,16 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Core\Annotation\ApiFilter;
 use ApiPlatform\Core\Annotation\ApiResource;
 use Carbon\Carbon;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\SerializedName;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter; // !!!IMPORTANT to use the right filter ORM instead of MongodB
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\RangeFilter;
+use ApiPlatform\Core\Serializer\Filter\PropertyFilter;
 
 /**
  * @ApiResource(
@@ -15,9 +20,17 @@ use Symfony\Component\Serializer\Annotation\SerializedName;
  *     "put"},
  *     normalizationContext={"groups"={"cheese_listing:read"}, "swagger_definition_name"="read"},
  *     denormalizationContext={"groups"={"cheese_listing:write"}, "swagger_definition_name"="write"},
- *     shortName="cheeses"
+ *     shortName="cheeses",
+ *     attributes={
+ *          "pagination_items_per_page" = 10
+ *     }
  * )
  * @ORM\Entity(repositoryClass="App\Repository\CheeseListingRepository")
+ * @ApiFilter(BooleanFilter::class, properties={"isPublished"})
+ * @ApiFilter(SearchFilter::class, properties={"title": "partial", "description": "partial"})
+ * @ApiFilter(RangeFilter::class, properties={"price"})
+ * @ApiFilter(PropertyFilter::class, properties={})
+
  */
 class CheeseListing
 {
@@ -58,9 +71,10 @@ class CheeseListing
      */
     private $isPublished = false;
 
-    public function __construct()
+    public function __construct(string $title = null) // constructor
     {
         $this->createdAt = new \DateTimeImmutable();
+        $this->title = $title;
     }
 
 
@@ -74,16 +88,29 @@ class CheeseListing
         return $this->title;
     }
 
-    public function setTitle(string $title): self
-    {
-        $this->title = $title;
-
-        return $this;
-    }
+//    public function setTitle(string $title): self
+//    {
+//        $this->title = $title;
+//
+//        return $this;
+//    }
 
     public function getDescription(): ?string
     {
         return $this->description;
+    }
+
+    /**
+     * get the first 39 characters of a long description
+     *
+     * @Groups("cheese_listing:read")
+     */
+    public function getShortDescription(): ?String
+    {
+        if (strlen($this->description) <40) {
+            return $this->description;
+        } else return strip_tags(substr($this->description, 0, 39).'...');
+
     }
 
     public function setDescription($description)
