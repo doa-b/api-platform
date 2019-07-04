@@ -12,6 +12,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter; // !!!IMPORTANT t
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\RangeFilter;
 use ApiPlatform\Core\Serializer\Filter\PropertyFilter;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ApiResource(
@@ -22,7 +23,8 @@ use ApiPlatform\Core\Serializer\Filter\PropertyFilter;
  *     denormalizationContext={"groups"={"cheese_listing:write"}, "swagger_definition_name"="write"},
  *     shortName="cheeses",
  *     attributes={
- *          "pagination_items_per_page" = 10
+ *          "pagination_items_per_page" = 10,
+ *          "formats"={"jsonld", "json", "html", "jsonhal", "csv"={"text/csv"}}
  *     }
  * )
  * @ORM\Entity(repositoryClass="App\Repository\CheeseListingRepository")
@@ -44,12 +46,19 @@ class CheeseListing
     /**
      * @ORM\Column(type="string", length=255)
      * @Groups({"cheese_listing:read", "cheese_listing:write"})
+     * @Assert\NotBlank()
+     * @Assert\Length(
+     *     min=2,
+     *     max=50,
+     *     maxMessage="Describe your cheese in 50 chars or less"
+     * )
      */
     private $title;
 
     /**
      * @ORM\Column(type="text")
      * @Groups({"cheese_listing:read"})
+     * @Assert\NotBlank()
      */
     private $description;
 
@@ -58,6 +67,8 @@ class CheeseListing
      *
      * @ORM\Column(type="integer")
      * @Groups({"cheese_listing:read", "cheese_listing:write"})
+     * @Assert\NotBlank()
+     * @Assert\GreaterThan(0)
      */
     private $price;
 
