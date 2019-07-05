@@ -19,8 +19,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     collectionOperations={"get", "post"},
  *     itemOperations={"get"={},
  *     "put"},
- *     normalizationContext={"groups"={"cheese_listing:read"}, "swagger_definition_name"="read"},
- *     denormalizationContext={"groups"={"cheese_listing:write"}, "swagger_definition_name"="write"},
+ *     normalizationContext={"groups"={"cheese_listing:read"}, "swagger_definition_name"="Read"},
+ *     denormalizationContext={"groups"={"cheese_listing:write"}, "swagger_definition_name"="Write"},
  *     shortName="cheeses",
  *     attributes={
  *          "pagination_items_per_page" = 10,
@@ -81,6 +81,13 @@ class CheeseListing
      * @ORM\Column(type="boolean")
      */
     private $isPublished = false;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="App\Entity\User", inversedBy="cheeseListings")
+     * @ORM\JoinColumn(nullable=false)
+     * @Groups({"cheese_listing:read", "cheese_listing:write"})
+     */
+    private $Owner;
 
     public function __construct(string $title = null) // constructor
     {
@@ -177,6 +184,18 @@ class CheeseListing
     public function setIsPublished(bool $isPublished): self
     {
         $this->isPublished = $isPublished;
+
+        return $this;
+    }
+
+    public function getOwner(): ?User
+    {
+        return $this->Owner;
+    }
+
+    public function setOwner(?User $Owner): self
+    {
+        $this->Owner = $Owner;
 
         return $this;
     }
